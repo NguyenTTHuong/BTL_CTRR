@@ -1,0 +1,13 @@
+# Các file biên dịch C++
+*.exe
+*.o
+*.obj
+
+# File tạm của Word / hệ thống
+~$*
+.DS_Store
+Thumbs.db
+
+# Thư mục build / output nếu có
+build/
+bin/
