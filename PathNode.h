@@ -9,4 +9,8 @@ struct PathNode {
     double h;
     PathNode*next;
 };
+
+PathNode* makePathNode (const string &name, double f,double g, double h);
+void freePath(PathNode* head);
+
 #endif
