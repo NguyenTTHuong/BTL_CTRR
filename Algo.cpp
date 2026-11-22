@@ -8,7 +8,7 @@ const double intMax = 1000000000;
 PathNode *findMeshPath(double weightMatrix[100][100], int startNode, int goalNode)
 {
     // Dk kiem tra tinh hop le cua start and goal
-    if (startNode < 0 || startNode > N || goalNode < 0 || goalNode > N)
+    if (startNode < 0 || startNode >= N || goalNode < 0 || goalNode >= N)
         return nullptr;
     // Degree
     int deg[N] = {0};
@@ -76,18 +76,13 @@ PathNode *findMeshPath(double weightMatrix[100][100], int startNode, int goalNod
         {
             if (!inOpen[v])
                 continue;
-            if (cur == -1)
-
-                continue;
-
             if (inOpen[v] && f[v] < minF)
             {
                 minF = f[v];
                 cur = v;
             }
         }
-        if (cur == -1)
-            return nullptr;
+        if (cur == -1 ) return nullptr;
         if (cur == goalNode)
             break;
         inOpen[cur] = false;
@@ -111,5 +106,16 @@ PathNode *findMeshPath(double weightMatrix[100][100], int startNode, int goalNod
         }
     }
 //Truy vết
-
+PathNode *head = nullptr;
+for (int v = goalNode; v!= -1 ; v = trace[v])
+{
+    PathNode*node = new PathNode;
+    node->name=to_string(v); //chuyen thanh chuoi
+    node->g=g[v];
+    node->h= h[v];
+    node->f=g[v]+h[v];
+    node->next = head;
+    head = node;
+}
+return head;
 }
