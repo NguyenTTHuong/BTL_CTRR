@@ -2,11 +2,10 @@
 #include <string>
 
 using namespace std;
-const int N = 100;
 const double intMax = 1000000000;
-// Bước 1: Tính bậc của các nút
 PathNode *findMeshPath(double weightMatrix[100][100], int startNode, int goalNode)
 {
+    const int N = 100;
     // Dk kiem tra tinh hop le cua start and goal
     if (startNode < 0 || startNode >= N || goalNode < 0 || goalNode >= N)
         return nullptr;
