@@ -138,7 +138,8 @@ double calcHeuristic3D (int coords[100][3], int u , int goal , int mode)
     {
         return sqrt (dx*dx+dy*dy+dz*dz);
     }
-      return max(dx,max(dy,dz));  //mode 3
+    //mode 3
+      return max(dx,max(dy,dz));  
 
 }
 PathNode* findAUVPath(double weightMatrix[100][100], int coords[100][3],
