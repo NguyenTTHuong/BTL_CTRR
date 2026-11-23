@@ -1,8 +1,12 @@
 #include "Algo.h"
-#include <string>
+#include <string> //task1+task2
+#include<cmath> // task2
+#include<algorithm> //task 2
+
 
 using namespace std;
 const double intMax = 1000000000;
+const double epsilon= 1e-9; 
 PathNode *findMeshPath(double weightMatrix[100][100], int startNode, int goalNode)
 {
     const int N = 100;
@@ -117,4 +121,29 @@ for (int v = goalNode; v!= -1 ; v = trace[v])
     head = node;
 }
 return head;
+}
+
+/*------------------------------------------------------------------*/
+double calcHeuristic3D (int coords[100][3], int u , int goal , int mode)
+{
+    double dx = (double)(abs(coords[u][0]- coords[goal][0])); //x_n - x_goal
+    double dy = (double)(abs(coords[u][1]- coords[goal][1]));
+    double dz = (double)(abs(coords[u][2]- coords[goal][2]));
+
+    if(mode == 1)
+    {
+        return dx+dy+dz;
+    }
+    else if (mode == 2)
+    {
+        return sqrt (dx*dx+dy*dy+dz*dz);
+    }
+      return max(dx,max(dy,dz));  //mode 3
+
+}
+PathNode* findAUVPath(double weightMatrix[100][100], int coords[100][3],
+                      int startPoint, int goalPoint, int mode)
+{
+    
+
 }

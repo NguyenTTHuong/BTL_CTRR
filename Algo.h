@@ -4,4 +4,7 @@
 
 //function in TASK 1
 PathNode* findMeshPath(double weightMatrix[100][100], int startNode, int goalNode);
+
+PathNode* findAUVPath(double weightMatrix[100][100], int coords[100][3],
+                      int startPoint, int goalPoint, int mode);
 #endif
