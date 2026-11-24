@@ -32,7 +32,6 @@ void task1()
     freePath(result);
 }
 /*-----------------------------------------------------------*/
-
 void task2()
 {
     cout << "==========TASK 2==========" << endl;
@@ -75,7 +74,66 @@ void task2()
 /*----------------------------------------------------------------*/
 void task3()
 {
+    const int S = 0, A = 1, B = 2, C = 3, D = 4, G = 5;
+    const char* nodeNames[6] = {"S", "A", "B", "C", "D", "G"};
 
+    double distMatrix[100][100] = {0};
+    double riskMatrix[100][100] = {0};
+    int coords[100][2] = {0};
+
+    
+    coords[S][0] = 0; coords[S][1] = 0; // S(0,0)
+    coords[A][0] = 3; coords[A][1] = 1; // A(3, 1)
+    coords[B][0] = 1; coords[B][1] = 3; // B(1, 3)
+    coords[C][0] = 4; coords[C][1] = 3; // C(4, 3)
+    coords[D][0] = 6; coords[D][1] = 1; // D(6, 1)
+    coords[G][0] = 7; coords[G][1] = 3; // G(7, 3)
+
+  
+    distMatrix[S][A] = 4; riskMatrix[S][A] = 0.3;
+    distMatrix[S][B] = 5; riskMatrix[S][B] = 0.05;
+    distMatrix[A][C] = 4; riskMatrix[A][C] = 0.2;
+    distMatrix[A][D] = 3; riskMatrix[A][D] = 0.4;
+    distMatrix[B][A] = 4; riskMatrix[B][A] = 0.1;
+    distMatrix[B][C] = 3; riskMatrix[B][C] = 0.05;
+    distMatrix[C][D] = 4; riskMatrix[C][D] = 0.1;
+    distMatrix[C][G] = 4; riskMatrix[C][G] = 0.05;
+    distMatrix[D][G] = 3; riskMatrix[D][G] = 0.3;
+
+    int startPoint = 0; //s
+    int goalPoint = 5; //G
+    int mode = 1; // Manhattan(1) , euclid (2);
+
+    double lambda;
+    cout << "Nhap he so phat rui ro lambda (lambda >= 0)"<<endl;
+    cin >> lambda;
+    
+
+    
+    PathNode* path = findProbabilisticPath(distMatrix, riskMatrix, coords, S, G, lambda, mode);
+    if(path == nullptr) return ;
+    printPath(path);
+   
+
+    //Psafe
+    double pSafe = 1.0;
+    PathNode* cur = path;
+    cout<<"Path is: ";
+    while (cur != nullptr)
+    {
+        int u = stoi(cur->name);
+        cout<<nodeNames[u];
+        if(cur->next != nullptr)
+        {
+            int v=stoi(cur->next->name);
+            pSafe = pSafe*(1.0-riskMatrix[u][v]);
+            cout <<"->";
+        }
+        cur = cur->next;
+    }
+        cout<<endl;
+        cout<<"Psafe is "<<pSafe<<endl;
+        freePath(path);
 }
 /*----------------------------------------------------------------*/
 void task4()
@@ -91,6 +149,7 @@ void task5()
 int main()
 {
     //task1();
-    task2();
+    //task2();
+    task3();
     return 0;
 }
