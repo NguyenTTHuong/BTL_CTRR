@@ -8,4 +8,16 @@ PathNode* findMeshPath(double weightMatrix[100][100], int startNode, int goalNod
 //function in TASK 2
 PathNode* findAUVPath(double weightMatrix[100][100], int coords[100][3],
                       int startPoint, int goalPoint, int mode);
+
+//function in TASK 3
+PathNode* findProbabilisticPath(double distMatrix[100][100],
+                                double riskMatrix[100][100], int coords[100][2],
+                                int startPoint, int goalPoint, double lambda, int mode);
+
+
+//function in TASK 4
+
+
+
+//function in TASK 5
 #endif

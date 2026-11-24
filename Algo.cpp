@@ -1,6 +1,6 @@
 #include "Algo.h"
 #include <string>    //task1+task2
-#include <cmath>     // task2
+#include <cmath>     // task2 +task3
 #include <algorithm> //task 2
 
 using namespace std;
@@ -126,9 +126,9 @@ PathNode *findMeshPath(double weightMatrix[100][100], int startNode, int goalNod
 /*------------------------------------------------------------------*/
 double calcHeuristic3D(int coords[100][3], int u, int goalPoint, int mode)
 {
-    double dx = (double)(abs(coords[u][0] - coords[goalPoint][0])); // x_n - x_goal
-    double dy = (double)(abs(coords[u][1] - coords[goalPoint][1]));
-    double dz = (double)(abs(coords[u][2] - coords[goalPoint][2]));
+    double dx = (double)(fabs(coords[u][0] - coords[goalPoint][0])); // x_n - x_goal
+    double dy = (double)(fabs(coords[u][1] - coords[goalPoint][1]));
+    double dz = (double)(fabs(coords[u][2] - coords[goalPoint][2]));
 
     if (mode == 1)
     {
@@ -176,8 +176,9 @@ PathNode *findAUVPath(double weightMatrix[100][100], int coords[100][3],
 
         for (int i = 0; i < N; i++)
         {
-            if (!inOpen[i]) continue;
-            if (cur == -1 || f[i] <f[cur]-epsilon || (fabs(f[i]-f[cur]) <= epsilon && g[i]>g[cur]))
+            if (!inOpen[i])
+                continue;
+            if (cur == -1 || f[i] < f[cur] - epsilon || (fabs(f[i] - f[cur]) <= epsilon && g[i] > g[cur]))
             {
                 cur = i;
             }
@@ -222,3 +223,115 @@ PathNode *findAUVPath(double weightMatrix[100][100], int coords[100][3],
 }
 
 /*----------------------------------------------------------------------*/
+double calcHeuristic2D(int coords[100][2], int u, int goalPoint, int mode)
+{
+    double dx = (double)(fabs(coords[u][0] - coords[goalPoint][0])); // x_n - x_goal
+    double dy = (double)(fabs(coords[u][1] - coords[goalPoint][1]));
+
+    if (mode == 1)
+    {
+        return dx + dy; // Manhattan
+    }
+    return sqrt(dx * dx + dy * dy); // Euclid
+}
+
+PathNode *findProbabilisticPath(double distMatrix[100][100],
+                                double riskMatrix[100][100], int coords[100][2],
+                                int startPoint, int goalPoint, double lambda, int mode)
+{
+    const int N = 100;
+    if (startPoint < 0 || startPoint >= N || goalPoint < 0 || goalPoint >= N)
+        return nullptr;
+
+    double g[N], h[N], f[N];
+    int trace[N];
+    bool inOpen[N];
+    bool inClosed[N];
+//Bước khởi tạo
+    for (int i = 0; i < N; i++)
+    {
+        g[i] = intMax;
+        h[i] = calcHeuristic2D(coords, i, goalPoint, mode);
+        f[i] = intMax;
+        trace[i] = -1;
+        inOpen[i] = false;
+        inClosed[i] = false;
+    }
+
+    g[startPoint] = 0;
+    f[startPoint] = calcHeuristic2D(coords, startPoint, goalPoint, mode);
+    inOpen[startPoint] = true; // chuyển startpoint vào Open
+
+    while (true)
+    {
+        int u = -1;
+        double minF = intMax;
+        for (int i = 0; i < N; i++)
+        {
+            if (inOpen[i] && f[i] < minF)
+            {
+                minF = f[i];
+                u = i;
+            }
+        }
+        if (u == -1)
+            return nullptr;
+
+        inOpen[u] = false;
+        inClosed[u] = true; // dua vao Closed
+
+        if (u == goalPoint)
+            break;
+
+        // Xet cac dinh ke of u
+        for (int v = 0; v < N; v++)
+        {
+            if (distMatrix[u][v] <= 0)
+                continue;
+            if (inClosed[v])
+                continue;
+
+            double newG = g[u] + (double)(distMatrix[u][v] + lambda * riskMatrix[u][v]);
+
+            if (!inOpen[v] )
+            {
+                g[v] = newG;
+                f[v] =g[v]+h[v];
+                trace[v] = u;
+                inOpen[v] = true;
+            }
+            else if (newG < g[v])
+            {
+                g[v] = newG;
+                f[v]=g[v]+h[v];
+                trace[v] = u;
+            }
+        }
+    }
+
+    // Backtracking
+    PathNode *head = nullptr;
+    int pathArr[N];
+    int pathLength = 0; // độ dài of đường đi
+    for (int v = goalPoint; v != -1; v = trace[v])
+    {
+        PathNode *node = makePathNode(to_string(v), g[v] + h[v], g[v], h[v]);
+        node->next = head;
+        head = node;
+        pathArr[pathLength] = v;
+        pathLength++;
+    }
+    double pSafe = 1.0;
+    for (int i = pathLength - 1; i > 0; i--)
+    {
+        int u = pathArr[i];
+        int v = pathArr[i - 1];
+        pSafe *= (1.0 - riskMatrix[u][v]);
+    }
+    return head;
+}
+/*----------------------------------------------------------------*/
+
+/*----------------------------------------------------------------*/
+
+/*----------------------------------------------------------------*/
