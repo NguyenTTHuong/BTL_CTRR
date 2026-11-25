@@ -225,8 +225,8 @@ PathNode *findAUVPath(double weightMatrix[100][100], int coords[100][3],
 /*----------------------------------------------------------------------*/
 double calcHeuristic2D(int coords[100][2], int u, int goalPoint, int mode)
 {
-    double dx = (double)(fabs(coords[u][0] - coords[goalPoint][0])); // x_n - x_goal
-    double dy = (double)(fabs(coords[u][1] - coords[goalPoint][1]));
+    double dx = (double)fabs(coords[u][0] - coords[goalPoint][0]); // x_n - x_goal
+    double dy = (double)fabs(coords[u][1] - coords[goalPoint][1]);
 
     if (mode == 1)
     {
@@ -333,8 +333,8 @@ PathNode *findProbabilisticPath(double distMatrix[100][100],
 /*----------------------------------------------------------------*/
 double calcHeuristicTask4(int x, int y, int goalX, int goalY, int mode)
 {
-    int dx = (double)fabs(x - goalX);
-    int dy = (double)fabs(y - goalY);
+    int dx = fabs((double)(x - goalX));
+    int dy = fabs((double)(y - goalY));
     if (mode == 1)
         return (dx + dy);
     return max(dx, dy);
@@ -477,7 +477,7 @@ PathNode *findGamePath(int mapGrid[100][100], int m, int n, int startX,
     // Backtracking
     PathNode *head = nullptr;
     int cx = goalX, cy = goalY;
-    while (!(cx == startX && cy == startY))
+    while (cx != -1 && cy != -1)
     {
         string name = (traceDir[cx][cy] == -1) ? "Start" : dirNames[traceDir[cx][cy]];
         PathNode *node = makePathNode(name, f[cx][cy], g[cx][cy], h[cx][cy]);

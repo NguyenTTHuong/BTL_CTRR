@@ -138,7 +138,35 @@ void task3()
 /*----------------------------------------------------------------*/
 void task4()
 {
+    const int m = 4; 
+    const int n = 5; 
+    int mapGrid[100][100] = {
+        {0, 0, 0, 1, 0}, 
+        {0, 2, 2, 0, 0}, 
+        {0, 0, 2, 0, 1}, 
+        {1, 1, 0, 0, 0}  
+    };
 
+    int startX = 0, startY = 0; //start(0,0)
+    int goalX = 3, goalY = 4;  //goal (3,4)
+
+    cout << "=== MODE 1: MANHATTAN ==="<<endl;
+    PathNode* pathMode1 = findGamePath(mapGrid, m, n, startX, startY, goalX, goalY, 1);
+    if (pathMode1 != nullptr) {
+        printPath(pathMode1);
+        freePath(pathMode1);
+    } else {
+        cout << "No path found"<<endl;
+    }
+
+    cout << "=== MODE 2: CHEBYSHEV ===" <<endl;
+    PathNode* pathMode2 = findGamePath(mapGrid, m, n, startX, startY, goalX, goalY, 2);
+    if (pathMode2 != nullptr) {
+        printPath(pathMode2);
+        freePath(pathMode2);
+    } else {
+        cout << "No path found."<<endl;
+    }
 }
 /*----------------------------------------------------------------*/
 void task5()
@@ -151,5 +179,6 @@ int main()
     //task1();
     //task2();
     //task3();
+    task4();
     return 0;
 }
