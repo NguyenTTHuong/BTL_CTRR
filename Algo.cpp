@@ -247,7 +247,7 @@ PathNode *findProbabilisticPath(double distMatrix[100][100],
     int trace[N];
     bool inOpen[N];
     bool inClosed[N];
-//Bước khởi tạo
+    // Bước khởi tạo
     for (int i = 0; i < N; i++)
     {
         g[i] = intMax;
@@ -293,17 +293,17 @@ PathNode *findProbabilisticPath(double distMatrix[100][100],
 
             double newG = g[u] + (double)(distMatrix[u][v] + lambda * riskMatrix[u][v]);
 
-            if (!inOpen[v] )
+            if (!inOpen[v])
             {
                 g[v] = newG;
-                f[v] =g[v]+h[v];
+                f[v] = g[v] + h[v];
                 trace[v] = u;
                 inOpen[v] = true;
             }
             else if (newG < g[v])
             {
                 g[v] = newG;
-                f[v]=g[v]+h[v];
+                f[v] = g[v] + h[v];
                 trace[v] = u;
             }
         }
@@ -331,7 +331,168 @@ PathNode *findProbabilisticPath(double distMatrix[100][100],
     return head;
 }
 /*----------------------------------------------------------------*/
+double calcHeuristicTask4(int x, int y, int goalX, int goalY, int mode)
+{
+    int dx = (double)fabs(x - goalX);
+    int dy = (double)fabs(y - goalY);
+    if (mode == 1)
+        return (dx + dy);
+    return max(dx, dy);
+}
+
+// ham kiem tra xem nos thuộc ô nào
+double checkCost(int terr)
+{
+    return (terr == 0) ? 1.0 : 2.0;
+    // 0: ô trống cost =1
+    // 2: đầm lầy cost = 2
+}
+
+PathNode *findGamePath(int mapGrid[100][100], int m, int n, int startX,
+                       int startY, int goalX, int goalY, int mode)
+{
+    const int N = 100;
+    if (m <= 0 || m > N || n <= 0 || n > N)
+        return nullptr; // check kich thuoc
+    if (startX < 0 || startX >= m || startY < 0 || startY >= n ||
+        goalX < 0 || goalX >= m || goalY < 0 || goalY >= n)
+        return nullptr;
+    if (mapGrid[startX][startY] == 1 || mapGrid[goalX][goalY] == 1)
+        return nullptr;
+
+    double g[N][N], h[N][N], f[N][N];
+    int traceX[N][N], traceY[N][N], traceDir[N][N];
+    long order[N][N];
+
+    bool inOpen[N][N];
+    bool inClosed[N][N];
+
+    for (int i = 0; i < m; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            g[i][j] = intMax;
+            h[i][j] = 0.0;
+            f[i][j] = intMax;
+            traceX[i][j] = -1;
+            traceY[i][j] = -1;
+            traceDir[i][j] = -1;
+            order[i][j] = 0; // XEm cai nao dc dua vao Open truoc
+            inClosed[i][j] = false;
+            inOpen[i][j] = false;
+        }
+    }
+
+    const int dx[8] = {-1, 1, 0, 0, -1, -1, 1, 1};
+    const int dy[8] = {0, 0, -1, 1, -1, 1, -1, 1};
+    const string dirNames[8] = {"Up", "Down", "Left", "Right",
+                                "Up-Left", "Up-Right", "Down-Left", "Down-Right"};
+    long counter = 0;
+    g[startX][startY] = 0.0;
+    h[startX][startY] = calcHeuristicTask4(startX, startY, goalX, goalY, mode);
+    f[startX][startY] = h[startX][startY];
+    order[startX][startY] = counter++;
+
+    inOpen[startX][startY] = true;
+    bool found = false;
+
+    while (true)
+    {
+        int curX = -1, curY = -1;
+        for (int i = 0; i < m; i++)
+            for (int j = 0; j < n; j++)
+            {
+                if (!inOpen[i][j])
+                    continue;
+                if (curX == -1)
+                {
+                    curX = i;
+                    curY = j;
+                    continue;
+                }
+                if (f[i][j] < f[curX][curY] - epsilon ||
+                    (fabs(f[i][j] - f[curX][curY]) <= epsilon &&
+                     (h[i][j] < h[curX][curY] - epsilon ||
+                      (fabs(h[i][j] - h[curX][curY]) <= epsilon &&
+                       order[i][j] < order[curX][curY]))))
+                {
+                    curX = i;
+                    curY = j;
+                }
+            }
+        if (curX == -1)
+            break; // Open ko co
+
+        inOpen[curX][curY] = false;
+        inClosed[curX][curY] = true;
+
+        if (curX == goalX && curY == goalY)
+        {
+            found = true;
+            break;
+        }
+
+        for (int dir = 0; dir < 8; dir++)
+        {
+            int nx = curX + dx[dir];
+            int ny = curY + dy[dir];
+
+            if (nx < 0 || nx >= m || ny < 0 || ny >= n)
+                continue;
+            if (mapGrid[nx][ny] == 1)
+                continue; // vat can
+            if (inClosed[nx][ny])
+                continue;
+
+            bool isDiagonal = (dir >= 4);
+            if (isDiagonal)
+            { // Luat cat goc
+                if (mapGrid[curX + dx[dir]][curY] == 1 ||
+                    mapGrid[curX][curY + dy[dir]] == 1)
+                    continue;
+            }
+
+            double baseCost = (mapGrid[nx][ny] == 2) ? 2.0 : 1.0;
+            double stepCost = isDiagonal ? baseCost * 1.5 : baseCost;
+            double newG = g[curX][curY] + stepCost;
+
+            if (!inOpen[nx][ny] || newG < g[nx][ny] - epsilon)
+            {
+                if (!inOpen[nx][ny])
+                    order[nx][ny] = counter++;
+                traceX[nx][ny] = curX;
+                traceY[nx][ny] = curY;
+                traceDir[nx][ny] = dir;
+                g[nx][ny] = newG;
+                h[nx][ny] = calcHeuristicTask4(nx, ny, goalX, goalY, mode);
+                f[nx][ny] = g[nx][ny] + h[nx][ny];
+                inOpen[nx][ny] = true;
+            }
+        }
+    }
+
+    if (!found)
+        return nullptr;
+
+    // Backtracking
+    PathNode *head = nullptr;
+    int cx = goalX, cy = goalY;
+    while (!(cx == startX && cy == startY))
+    {
+        string name = (traceDir[cx][cy] == -1) ? "Start" : dirNames[traceDir[cx][cy]];
+        PathNode *node = makePathNode(name, f[cx][cy], g[cx][cy], h[cx][cy]);
+        node->next = head;
+        head = node;
+        int px = traceX[cx][cy];
+        int py = traceY[cx][cy];
+        cx = px;
+        cy = py;
+    }
+    return head;
+}
 
 /*----------------------------------------------------------------*/
-
+PathNode *findPCBPath(int pcbGrid[100][100], int m, int n, int startX,
+                      int startY, int exitX, int exitY,
+                      double weightMatrix[100][100], int mode);
 /*----------------------------------------------------------------*/
