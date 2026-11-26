@@ -171,7 +171,36 @@ void task4()
 /*----------------------------------------------------------------*/
 void task5()
 {
-    
+    const int m = 4; 
+    const int n = 3; //ví dụ trong report
+    int pcbGrid[100][100] = {
+        {0, 0, 0}, 
+        {0, 0, 0}, 
+        {0, 0, 0}, 
+        {0, 0, 0}  
+    };
+
+    int startX = 0, startY = 0; // Start (0,0)
+    int exitX = 2, exitY = 1;   // Goal (2,1)
+    double weightMatrix[100][100];
+
+    cout << "=== TASK 5 - MODE 1: MANHATTAN ===" << endl;
+    PathNode* pathMode1 = findPCBPath(pcbGrid, m, n, startX, startY, exitX, exitY, weightMatrix, 1);
+    if (pathMode1 != nullptr) {
+        printPath(pathMode1); 
+        freePath(pathMode1);  
+    } else {
+        cout << "Khong co duong di" << endl;
+    }
+
+    cout << "=== TASK 5 - MODE 2: CHEBYSHEV ===" << endl;
+    PathNode* pathMode2 = findPCBPath(pcbGrid, m, n, startX, startY, exitX, exitY, weightMatrix, 2);
+    if (pathMode2 != nullptr) {
+        printPath(pathMode2);
+        freePath(pathMode2);
+    } else {
+        cout << "Khong co duong di" << endl;
+    }
 }
 /*----------------------------------------------------------------*/
 int main()
@@ -180,5 +209,6 @@ int main()
     //task2();
     //task3();
     //task4();
+    task5();
     return 0;
 }
