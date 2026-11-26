@@ -492,7 +492,181 @@ PathNode *findGamePath(int mapGrid[100][100], int m, int n, int startX,
 }
 
 /*----------------------------------------------------------------*/
+
+struct OpenNode
+{
+    int cell;
+    int dir;
+    double f, g;
+    int order;
+    bool inOpen;
+};
+
+double calcHeuristicTask5(int r, int c, int exitX, int exitY, int mode)
+{
+    int dr = abs(r - exitX);
+    int dc = abs(c - exitY);
+    if (mode == 1) return dr + dc;   // Manhattan
+    return max(dr, dc);              // Chebyshev
+}
+
 PathNode *findPCBPath(int pcbGrid[100][100], int m, int n, int startX,
                       int startY, int exitX, int exitY,
-                      double weightMatrix[100][100], int mode);
+                      double weightMatrix[100][100], int mode)
+{
+    const double INF = 1e9;
+    int total = m * n;
+
+    // 1. Khởi tạo ma trận trọng số = 0.0 (chặn tràn mảng 100x100)
+    for (int i = 0; i < total && i < 100; i++)
+        for (int j = 0; j < total && j < 100; j++)
+            weightMatrix[i][j] = 0.0;
+
+    const int dr[4] = {-1, 1, 0, 0};   // Up, Down, Left, Right
+    const int dc[4] = {0, 0, -1, 1};
+    const int noDir = 4;
+    const double pen = 0.5;
+
+    // 2. Chuyển lưới -> ma trận trọng số
+    for (int r = 0; r < m; r++)
+    {
+        for (int c = 0; c < n; c++)
+        {
+            if (pcbGrid[r][c] == 1) continue;
+            int u = r * n + c;
+            for (int i = 0; i < 4; i++)
+            {
+                int nr = r + dr[i];
+                int nc = c + dc[i];
+                if (nr < 0 || nr >= m || nc < 0 || nc >= n) continue;
+                if (pcbGrid[nr][nc] == 1) continue;
+                int v = nr * n + nc;
+                if (u < 100 && v < 100)
+                    weightMatrix[u][v] = 1.0;
+            }
+        }
+    }
+
+    // 3. Kiểm tra đầu vào
+    if (startX < 0 || startX >= m || startY < 0 || startY >= n) return nullptr;
+    if (exitX < 0 || exitX >= m || exitY < 0 || exitY >= n) return nullptr;
+    if (pcbGrid[startX][startY] == 1 || pcbGrid[exitX][exitY] == 1) return nullptr;
+
+    // 4. A* với trạng thái (ô, hướng đi vào)
+    static double g[10001][5];
+    static bool inClosed[10001][5];
+    static int traceU[10001][5], traceD[10001][5];
+    for (int i = 0; i < total; i++)
+    {
+        for (int d = 0; d < 5; d++)
+        {
+            g[i][d] = INF;
+            inClosed[i][d] = false;
+            traceU[i][d] = -1;
+            traceD[i][d] = -1;
+        }
+    }
+
+    const int MAXOPEN = 160010;
+    static OpenNode openList[MAXOPEN];
+    int openCount = 0;    // số phần tử trong Open
+    int orderTime = 0;    // quy tắc FIFO
+    int startID = startX * n + startY;
+    int goalID = exitX * n + exitY;
+
+    double hStart = calcHeuristicTask5(startX, startY, exitX, exitY, mode);
+    g[startID][noDir] = 0.0;
+    openList[openCount++] = {startID, noDir, hStart, 0.0, orderTime++, true};
+
+    while (true)
+    {
+        // Chọn f nhỏ nhất, hòa thì chọn order nhỏ nhất (FIFO)
+        int best_idx = -1;
+        double minF = 1e18;
+        int min_ord = 2147483647;
+        for (int i = 0; i < openCount; i++)
+        {
+            if (!openList[i].inOpen) continue;
+            if (openList[i].f < minF ||
+                (openList[i].f == minF && openList[i].order < min_ord))
+            {
+                minF = openList[i].f;
+                min_ord = openList[i].order;
+                best_idx = i;
+            }
+        }
+        if (best_idx == -1) return nullptr;   // không có đường đi
+
+        OpenNode curr = openList[best_idx];
+        openList[best_idx].inOpen = false;
+
+        if (inClosed[curr.cell][curr.dir]) continue;
+        if (curr.g > g[curr.cell][curr.dir]) continue;   // mục cũ
+        inClosed[curr.cell][curr.dir] = true;
+
+        int r = curr.cell / n;
+        int c = curr.cell % n;
+
+        // Đến đích -> truy vết
+        if (curr.cell == goalID)
+        {
+            PathNode *head = nullptr;
+            int trace_u = curr.cell;
+            int trace_d = curr.dir;
+
+            while (trace_u != -1)
+            {
+                int rr = trace_u / n;
+                int cc = trace_u % n;
+
+                string name = "(" + to_string(rr) + "," + to_string(cc) + ")";
+                double node_g = g[trace_u][trace_d];
+                double node_h = calcHeuristicTask5(rr, cc, exitX, exitY, mode);
+                double node_f = node_g + node_h;
+
+                PathNode *newNode = makePathNode(name, node_f, node_g, node_h);
+                newNode->next = head;
+                head = newNode;
+
+                int next_u = traceU[trace_u][trace_d];
+                int next_d = traceD[trace_u][trace_d];
+                trace_u = next_u;
+                trace_d = next_d;
+            }
+            return head;
+        }
+
+        
+        for (int i = 0; i < 4; i++)
+        {
+            int nr = r + dr[i];
+            int nc = c + dc[i];
+
+            if (nr < 0 || nr >= m || nc < 0 || nc >= n) continue; //ktra hướng
+            if (pcbGrid[nr][nc] == 1) continue;
+
+            int nextID = nr * n + nc;
+            if (weightMatrix[curr.cell][nextID] == 0.0) continue;
+
+            // Phạt uốn dây nếu đổi hướng
+            double penalty = 0.0;
+            if (curr.dir != noDir && curr.dir != i) penalty = pen;
+
+            double newG = curr.g + weightMatrix[curr.cell][nextID] + penalty;
+
+            if (newG < g[nextID][i] && !inClosed[nextID][i])
+            {
+                if (openCount >= MAXOPEN) continue;   // bảo vệ tràn mảng
+
+                g[nextID][i] = newG;
+                traceU[nextID][i] = curr.cell;
+                traceD[nextID][i] = curr.dir;
+
+                double h_val = calcHeuristicTask5(nr, nc, exitX, exitY, mode);
+                openList[openCount++] = {nextID, i, newG + h_val, newG, orderTime++, true};
+            }
+        }
+    }
+}
+
 /*----------------------------------------------------------------*/
