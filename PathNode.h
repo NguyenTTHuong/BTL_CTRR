@@ -7,6 +7,7 @@ struct PathNode {
     double f;
     double g;
     double h;
+    double pSafe=1.0; //task 3
     PathNode*next;
 };
 

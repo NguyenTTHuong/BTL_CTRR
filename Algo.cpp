@@ -147,10 +147,13 @@ PathNode *findAUVPath(double weightMatrix[100][100], int coords[100][3],
     const int N = 100;
     if (startPoint < 0 || startPoint >= N || goalPoint < 0 || goalPoint >= N)
         return nullptr;
-    if (startPoint == goalPoint)
+if (startPoint == goalPoint)
     {
         double h0 = calcHeuristic3D(coords, startPoint, goalPoint, mode);
-        return makePathNode(to_string(startPoint), h0, 0.0, h0);
+        string nodeName = "(" + to_string(coords[startPoint][0]) + "," +
+                          to_string(coords[startPoint][1]) + "," +
+                          to_string(coords[startPoint][2]) + ")";
+        return makePathNode(nodeName, h0, 0.0, h0);
     }
 
     double g[N], h[N], f[N];
@@ -207,12 +210,14 @@ PathNode *findAUVPath(double weightMatrix[100][100], int coords[100][3],
             }
         }
     }
-    // Backtracking
+// Backtracking
     PathNode *head = nullptr;
     for (int v = goalPoint; v != -1; v = trace[v])
     {
         PathNode *node = new PathNode;
-        node->name = to_string(v);
+        node->name = "(" + to_string(coords[v][0]) + "," +
+                     to_string(coords[v][1]) + "," +
+                     to_string(coords[v][2]) + ")";
         node->f = f[v];
         node->g = g[v];
         node->h = h[v];
@@ -232,7 +237,8 @@ double calcHeuristic2D(int coords[100][2], int u, int goalPoint, int mode)
     {
         return dx + dy; // Manhattan
     }
-    return sqrt(dx * dx + dy * dy); // Euclid
+    else if (mode == 2) return sqrt(dx * dx + dy * dy); // Euclid
+    return max(dx,dy); //mode 3
 }
 
 PathNode *findProbabilisticPath(double distMatrix[100][100],
@@ -312,21 +318,36 @@ PathNode *findProbabilisticPath(double distMatrix[100][100],
     // Backtracking
     PathNode *head = nullptr;
     int pathArr[N];
-    int pathLength = 0; // độ dài of đường đi
+    int pathLength = 0; 
     for (int v = goalPoint; v != -1; v = trace[v])
     {
-        PathNode *node = makePathNode(to_string(v), g[v] + h[v], g[v], h[v]);
+        string nodeName = "(" + to_string(coords[v][0]) + "," + to_string(coords[v][1]) + ")";
+        PathNode *node = makePathNode(nodeName, g[v] + h[v], g[v], h[v]);
         node->next = head;
         head = node;
         pathArr[pathLength] = v;
         pathLength++;
     }
+
     double pSafe = 1.0;
+    PathNode *cur = head;
+    if (cur != nullptr)
+    {
+        cur->pSafe = pSafe;
+        cur = cur->next;
+    }
+
     for (int i = pathLength - 1; i > 0; i--)
     {
         int u = pathArr[i];
         int v = pathArr[i - 1];
         pSafe *= (1.0 - riskMatrix[u][v]);
+
+        if (cur != nullptr)
+        {
+            cur->pSafe = pSafe; 
+            cur = cur->next;
+        }
     }
     return head;
 }
