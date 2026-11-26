@@ -81,7 +81,6 @@ void task3()
     double riskMatrix[100][100] = {0};
     int coords[100][2] = {0};
 
-    
     coords[S][0] = 0; coords[S][1] = 0; // S(0,0)
     coords[A][0] = 3; coords[A][1] = 1; // A(3, 1)
     coords[B][0] = 1; coords[B][1] = 3; // B(1, 3)
@@ -89,7 +88,6 @@ void task3()
     coords[D][0] = 6; coords[D][1] = 1; // D(6, 1)
     coords[G][0] = 7; coords[G][1] = 3; // G(7, 3)
 
-  
     distMatrix[S][A] = 4; riskMatrix[S][A] = 0.3;
     distMatrix[S][B] = 5; riskMatrix[S][B] = 0.05;
     distMatrix[A][C] = 4; riskMatrix[A][C] = 0.2;
@@ -100,41 +98,51 @@ void task3()
     distMatrix[C][G] = 4; riskMatrix[C][G] = 0.05;
     distMatrix[D][G] = 3; riskMatrix[D][G] = 0.3;
 
-    int startPoint = 0; //s
-    int goalPoint = 5; //G
-    int mode = 1; // Manhattan(1) , euclid (2);
+    int startPoint = 0; // S
+    int goalPoint = 5;  // G
+    int mode ;      // Manhattan (1), Euclid (2)
+    cout<<"Nhap mode (1:Man , 2:Euc , 3:Cheb)"<<endl;
+    cin>>mode;
 
     double lambda;
-    cout << "Nhap he so phat rui ro lambda (lambda >= 0)"<<endl;
+    cout << "Nhap he so phat rui ro lambda (lambda >= 0)" << endl;
     cin >> lambda;
-    
 
-    
-    PathNode* path = findProbabilisticPath(distMatrix, riskMatrix, coords, S, G, lambda, mode);
-    if(path == nullptr) return ;
+    PathNode* path = findProbabilisticPath(distMatrix, riskMatrix, coords, startPoint, goalPoint, lambda, mode);
+    if (path == nullptr) return;
     printPath(path);
-   
 
-    //Psafe
-    double pSafe = 1.0;
+    // Psafe 
     PathNode* cur = path;
-    cout<<"Path is: ";
+    double finalPSafe = 1.0;
+    cout << "Path is: ";
     while (cur != nullptr)
     {
-        int u = stoi(cur->name);
-        cout<<nodeNames[u];
-        if(cur->next != nullptr)
+        for (int i = 0; i < 6; i++)
         {
-            int v=stoi(cur->next->name);
-            pSafe = pSafe*(1.0-riskMatrix[u][v]);
-            cout <<"->";
+            string coordStr = "(" + to_string(coords[i][0]) + "," + to_string(coords[i][1]) + ")";
+            if (cur->name == coordStr)
+            {
+                cout << nodeNames[i];
+                break;
+            }
+        }
+
+        if (cur->next != nullptr)
+        {
+            cout << "->";
+        }
+        else
+        {
+            finalPSafe = cur->pSafe;
         }
         cur = cur->next;
     }
-        cout<<endl;
-        cout<<"Psafe is "<<pSafe<<endl;
-        freePath(path);
+    cout << endl;
+    cout << "Psafe is " << finalPSafe << endl;
+    freePath(path);
 }
+
 /*----------------------------------------------------------------*/
 void task4()
 {
@@ -207,8 +215,8 @@ int main()
 {
     //task1();
     //task2();
-    //task3();
+    task3();
     //task4();
-    task5();
+    //task5();
     return 0;
 }
