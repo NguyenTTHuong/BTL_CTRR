@@ -547,12 +547,12 @@ PathNode *findPCBPath(int pcbGrid[100][100], int m, int n, int startX,
         }
     }
 
-    // 3. Kiểm tra đầu vào
+    //ktra dau vào
     if (startX < 0 || startX >= m || startY < 0 || startY >= n) return nullptr;
     if (exitX < 0 || exitX >= m || exitY < 0 || exitY >= n) return nullptr;
     if (pcbGrid[startX][startY] == 1 || pcbGrid[exitX][exitY] == 1) return nullptr;
 
-    // 4. A* với trạng thái (ô, hướng đi vào)
+    // A* với trạng thái 
     static double g[10001][5];
     static bool inClosed[10001][5];
     static int traceU[10001][5], traceD[10001][5];
@@ -595,19 +595,19 @@ PathNode *findPCBPath(int pcbGrid[100][100], int m, int n, int startX,
                 best_idx = i;
             }
         }
-        if (best_idx == -1) return nullptr;   // không có đường đi
+        if (best_idx == -1) return nullptr;   // no path
 
         OpenNode curr = openList[best_idx];
         openList[best_idx].inOpen = false;
 
         if (inClosed[curr.cell][curr.dir]) continue;
-        if (curr.g > g[curr.cell][curr.dir]) continue;   // mục cũ
+        if (curr.g > g[curr.cell][curr.dir]) continue;  
         inClosed[curr.cell][curr.dir] = true;
 
         int r = curr.cell / n;
         int c = curr.cell % n;
 
-        // Đến đích -> truy vết
+        // Backtracking
         if (curr.cell == goalID)
         {
             PathNode *head = nullptr;
