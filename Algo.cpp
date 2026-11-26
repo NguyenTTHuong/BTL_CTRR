@@ -13,19 +13,15 @@ PathNode *findMeshPath(double weightMatrix[100][100], int startNode, int goalNod
     if (startNode < 0 || startNode >= N || goalNode < 0 || goalNode >= N)
         return nullptr;
     // Degree
+
     int deg[N] = {0};
     for (int v = 0; v < N; v++)
     {
-        int outdeg = 0;
-        int indeg = 0;
+        int d = 0;
         for (int j = 0; j < N; ++j)
-        {
             if (weightMatrix[v][j] > 0)
-                outdeg++;
-            if (weightMatrix[j][v] > 0)
-                indeg++;
-        }
-        deg[v] = indeg + outdeg;
+                d++;
+        deg[v] = d;
     }
 
     // tim weightMatrix min
@@ -45,10 +41,65 @@ PathNode *findMeshPath(double weightMatrix[100][100], int startNode, int goalNod
     if (!existEdge)
         wMin = 0; // ko ton tai canh
 
-    double h[N] = {0}; // heuristic
-    for (int v = 0; v < N; v++)
-        h[v] = wMin;
-    h[goalNode] = 0; // nut goal =0
+    int distBFS[N];
+    int bfsQueue[N];
+
+    // ktao hang doi
+    int idx = 0;
+    while (idx < N)
+    {
+        distBFS[idx] = -1;
+        bfsQueue[idx] = 0;
+        idx++;
+    }
+
+    int front = 0, rear = 0;
+
+    // reverse
+    distBFS[goalNode] = 0;
+    bfsQueue[rear] = goalNode;
+    rear = rear + 1;
+
+    // Loops
+    while (front < rear)
+    {
+        int v = bfsQueue[front];
+        front = front + 1;
+        int u = 0;
+        while (u < N)
+        {
+            if (weightMatrix[u][v] > 0 && distBFS[u] == -1)
+            {
+                distBFS[u] = distBFS[v] + 1;
+                bfsQueue[rear] = u;
+                rear = rear + 1;
+            }
+            u++;
+        }
+    }
+
+    // Tính h(v) = d_BFS(v, goalNode) * wMin
+    double h[N];
+    int k = 0;
+    while (k < N)
+    {
+        h[k] = 0;
+        k++;
+    }
+
+    int v = 0;
+    while (v < N)
+    {
+        if (distBFS[v] != -1)
+        {
+            h[v] = distBFS[v] * wMin;
+        }
+        else
+        {
+            h[v] = intMax;
+        }
+        v++;
+    }
 
     // Bước 2: Khởi tạo
     double g[N];
@@ -147,7 +198,7 @@ PathNode *findAUVPath(double weightMatrix[100][100], int coords[100][3],
     const int N = 100;
     if (startPoint < 0 || startPoint >= N || goalPoint < 0 || goalPoint >= N)
         return nullptr;
-if (startPoint == goalPoint)
+    if (startPoint == goalPoint)
     {
         double h0 = calcHeuristic3D(coords, startPoint, goalPoint, mode);
         string nodeName = "(" + to_string(coords[startPoint][0]) + "," +
@@ -210,7 +261,7 @@ if (startPoint == goalPoint)
             }
         }
     }
-// Backtracking
+    // Backtracking
     PathNode *head = nullptr;
     for (int v = goalPoint; v != -1; v = trace[v])
     {
@@ -237,8 +288,9 @@ double calcHeuristic2D(int coords[100][2], int u, int goalPoint, int mode)
     {
         return dx + dy; // Manhattan
     }
-    else if (mode == 2) return sqrt(dx * dx + dy * dy); // Euclid
-    return max(dx,dy); //mode 3
+    else if (mode == 2)
+        return sqrt(dx * dx + dy * dy); // Euclid
+    return max(dx, dy);                 // mode 3
 }
 
 PathNode *findProbabilisticPath(double distMatrix[100][100],
@@ -318,7 +370,7 @@ PathNode *findProbabilisticPath(double distMatrix[100][100],
     // Backtracking
     PathNode *head = nullptr;
     int pathArr[N];
-    int pathLength = 0; 
+    int pathLength = 0;
     for (int v = goalPoint; v != -1; v = trace[v])
     {
         string nodeName = "(" + to_string(coords[v][0]) + "," + to_string(coords[v][1]) + ")";
@@ -345,7 +397,7 @@ PathNode *findProbabilisticPath(double distMatrix[100][100],
 
         if (cur != nullptr)
         {
-            cur->pSafe = pSafe; 
+            cur->pSafe = pSafe;
             cur = cur->next;
         }
     }
@@ -527,8 +579,9 @@ double calcHeuristicTask5(int r, int c, int exitX, int exitY, int mode)
 {
     int dr = abs(r - exitX);
     int dc = abs(c - exitY);
-    if (mode == 1) return dr + dc;   // Manhattan
-    return max(dr, dc);              // Chebyshev
+    if (mode == 1)
+        return dr + dc; // Manhattan
+    return max(dr, dc); // Chebyshev
 }
 
 PathNode *findPCBPath(int pcbGrid[100][100], int m, int n, int startX,
@@ -543,7 +596,7 @@ PathNode *findPCBPath(int pcbGrid[100][100], int m, int n, int startX,
         for (int j = 0; j < total && j < 100; j++)
             weightMatrix[i][j] = 0.0;
 
-    const int dr[4] = {-1, 1, 0, 0};   // Up, Down, Left, Right
+    const int dr[4] = {-1, 1, 0, 0}; // Up, Down, Left, Right
     const int dc[4] = {0, 0, -1, 1};
     const int noDir = 4;
     const double pen = 0.5;
@@ -553,14 +606,17 @@ PathNode *findPCBPath(int pcbGrid[100][100], int m, int n, int startX,
     {
         for (int c = 0; c < n; c++)
         {
-            if (pcbGrid[r][c] == 1) continue;
+            if (pcbGrid[r][c] == 1)
+                continue;
             int u = r * n + c;
             for (int i = 0; i < 4; i++)
             {
                 int nr = r + dr[i];
                 int nc = c + dc[i];
-                if (nr < 0 || nr >= m || nc < 0 || nc >= n) continue;
-                if (pcbGrid[nr][nc] == 1) continue;
+                if (nr < 0 || nr >= m || nc < 0 || nc >= n)
+                    continue;
+                if (pcbGrid[nr][nc] == 1)
+                    continue;
                 int v = nr * n + nc;
                 if (u < 100 && v < 100)
                     weightMatrix[u][v] = 1.0;
@@ -568,12 +624,15 @@ PathNode *findPCBPath(int pcbGrid[100][100], int m, int n, int startX,
         }
     }
 
-    //ktra dau vào
-    if (startX < 0 || startX >= m || startY < 0 || startY >= n) return nullptr;
-    if (exitX < 0 || exitX >= m || exitY < 0 || exitY >= n) return nullptr;
-    if (pcbGrid[startX][startY] == 1 || pcbGrid[exitX][exitY] == 1) return nullptr;
+    // ktra dau vào
+    if (startX < 0 || startX >= m || startY < 0 || startY >= n)
+        return nullptr;
+    if (exitX < 0 || exitX >= m || exitY < 0 || exitY >= n)
+        return nullptr;
+    if (pcbGrid[startX][startY] == 1 || pcbGrid[exitX][exitY] == 1)
+        return nullptr;
 
-    // A* với trạng thái 
+    // A* với trạng thái
     static double g[10001][5];
     static bool inClosed[10001][5];
     static int traceU[10001][5], traceD[10001][5];
@@ -590,8 +649,8 @@ PathNode *findPCBPath(int pcbGrid[100][100], int m, int n, int startX,
 
     const int MAXOPEN = 160010;
     static OpenNode openList[MAXOPEN];
-    int openCount = 0;    // số phần tử trong Open
-    int orderTime = 0;    // quy tắc FIFO
+    int openCount = 0; // số phần tử trong Open
+    int orderTime = 0; // quy tắc FIFO
     int startID = startX * n + startY;
     int goalID = exitX * n + exitY;
 
@@ -607,7 +666,8 @@ PathNode *findPCBPath(int pcbGrid[100][100], int m, int n, int startX,
         int min_ord = 2147483647;
         for (int i = 0; i < openCount; i++)
         {
-            if (!openList[i].inOpen) continue;
+            if (!openList[i].inOpen)
+                continue;
             if (openList[i].f < minF ||
                 (openList[i].f == minF && openList[i].order < min_ord))
             {
@@ -616,13 +676,16 @@ PathNode *findPCBPath(int pcbGrid[100][100], int m, int n, int startX,
                 best_idx = i;
             }
         }
-        if (best_idx == -1) return nullptr;   // no path
+        if (best_idx == -1)
+            return nullptr; // no path
 
         OpenNode curr = openList[best_idx];
         openList[best_idx].inOpen = false;
 
-        if (inClosed[curr.cell][curr.dir]) continue;
-        if (curr.g > g[curr.cell][curr.dir]) continue;  
+        if (inClosed[curr.cell][curr.dir])
+            continue;
+        if (curr.g > g[curr.cell][curr.dir])
+            continue;
         inClosed[curr.cell][curr.dir] = true;
 
         int r = curr.cell / n;
@@ -657,27 +720,31 @@ PathNode *findPCBPath(int pcbGrid[100][100], int m, int n, int startX,
             return head;
         }
 
-        
         for (int i = 0; i < 4; i++)
         {
             int nr = r + dr[i];
             int nc = c + dc[i];
 
-            if (nr < 0 || nr >= m || nc < 0 || nc >= n) continue; //ktra hướng
-            if (pcbGrid[nr][nc] == 1) continue;
+            if (nr < 0 || nr >= m || nc < 0 || nc >= n)
+                continue; // ktra hướng
+            if (pcbGrid[nr][nc] == 1)
+                continue;
 
             int nextID = nr * n + nc;
-            if (weightMatrix[curr.cell][nextID] == 0.0) continue;
+            if (weightMatrix[curr.cell][nextID] == 0.0)
+                continue;
 
             // Phạt uốn dây nếu đổi hướng
             double penalty = 0.0;
-            if (curr.dir != noDir && curr.dir != i) penalty = pen;
+            if (curr.dir != noDir && curr.dir != i)
+                penalty = pen;
 
             double newG = curr.g + weightMatrix[curr.cell][nextID] + penalty;
 
             if (newG < g[nextID][i] && !inClosed[nextID][i])
             {
-                if (openCount >= MAXOPEN) continue;   // bảo vệ tràn mảng
+                if (openCount >= MAXOPEN)
+                    continue; // bảo vệ tràn mảng
 
                 g[nextID][i] = newG;
                 traceU[nextID][i] = curr.cell;
